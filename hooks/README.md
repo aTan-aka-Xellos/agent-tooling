@@ -1,6 +1,6 @@
 # Cursor usage-stats hook
 
-Logs per-turn usage stats (model, cost, tokens) to `log/usage_stats.log` after every agent turn. The log rotates daily: the previous day's file is renamed to `usage_stats_<DDMMYYYY>.log`.
+Logs per-turn usage stats (model, cost, tokens) to `log/usage_stats.log` after every agent turn. The `log/` directory sits next to `hooks/` in the repo root (the script resolves it as `../log/` relative to its own location, regardless of the working directory). The log rotates daily: the previous day's file is renamed to `usage_stats_<DDMMYYYY>.log`.
 
 A single Cursor `stop` hook runs [fetch_usage_stats.py](fetch_usage_stats.py), which fetches the usage event for the current conversation from Cursor's dashboard API and writes it to the log. Nothing is printed to chat.
 
@@ -62,6 +62,8 @@ Example log entry:
 
 ## Environment variables (required)
 
+> **Note:** this setup targets a **team** subscription (the API takes a `teamId`); it has not been tested with an individual subscription.
+
 | Variable | Used for |
 |----------|----------|
 | `WorkosCursorSessionToken` | `Cookie: WorkosCursorSessionToken=<value>` on API requests |
@@ -83,6 +85,16 @@ setx CursorUserId "<your-user-id>"
 ```
 
 Then fully restart Cursor (`setx` does not affect already-running processes).
+
+**Set (Linux / macOS):** add to your shell profile (`~/.bashrc`, `~/.zshrc`, …):
+
+```sh
+export WorkosCursorSessionToken="paste-value-here"
+export CursorTeamId="<your-team-id>"
+export CursorUserId="<your-user-id>"
+```
+
+Then restart Cursor **from a terminal** that has the variables loaded (an app launched from the desktop/Dock may not inherit shell-profile variables; on macOS, `launchctl setenv NAME value` makes a variable visible to GUI apps until reboot).
 
 **Token expiry:** `WorkosCursorSessionToken` is a session cookie and expires. When the log shows auth errors (HTTP 401/403), refresh the token and restart Cursor.
 
