@@ -128,6 +128,18 @@ On Linux, use `python hooks/fetch_usage_stats.py` in `hooks.json` (no Keychain w
 
 **Token expiry:** `WorkosCursorSessionToken` is a session cookie and expires. When the log shows auth errors (HTTP 401/403), re-run the `security add-generic-password … -U` command for `cursor-session` with the new token.
 
+## View logs
+
+Stats are written to `~/.cursor/log/usage_stats.log` (user hooks) or `log/usage_stats.log` next to `hooks/` (project hooks).
+
+To follow the log live, add to `~/.zshrc`:
+
+```sh
+alias usage='tail -n 17 -f ~/.cursor/log/usage_stats.log'
+```
+
+Then run `usage` in any terminal.
+
 ## Security
 
 - Never commit the token or IDs; on macOS store them in Keychain (or set as environment variables on other OSes).
