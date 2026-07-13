@@ -7,6 +7,7 @@ import json
 import logging
 import logging.handlers
 import os
+import ssl
 import sys
 import time
 import urllib.error
@@ -110,8 +111,24 @@ def validate_env() -> tuple[str, int, int] | str:
     return os.environ["WorkosCursorSessionToken"], team_id, user_id
 
 
+def _ssl_context() -> ssl.SSLContext:
+    """Build SSL context; mise/pyenv Python on macOS often lacks a working default CA bundle."""
+    for cafile in (
+        os.environ.get("SSL_CERT_FILE"),
+        "/opt/homebrew/etc/openssl@3/cert.pem",
+        "/usr/local/etc/openssl@3/cert.pem",
+        "/etc/ssl/cert.pem",
+    ):
+        if cafile and os.path.isfile(cafile):
+            try:
+                return ssl.create_default_context(cafile=cafile)
+            except ssl.SSLError:
+                continue
+    return ssl.create_default_context()
+
+
 def _perform_usage_request(request: urllib.request.Request) -> tuple[dict[str, Any], int, str]:
-    with urllib.request.urlopen(request, timeout=25) as response:
+    with urllib.request.urlopen(request, timeout=25, context=_ssl_context()) as response:
         status = response.status
         raw = response.read().decode("utf-8")
     data = json.loads(raw) if raw else {}
